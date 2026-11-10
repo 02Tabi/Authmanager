@@ -1,0 +1,60 @@
+{% extends "base/layout.html" %} <!-- Update this if your login page uses a different base template -->
+{% load static %}
+{% block title %}Verify Identity — Auth Manager{% endblock %}
+
+{% block content %}
+<div class="bg-light min-vh-100 d-flex flex-row align-items-center">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5">
+        <div class="card mb-4 mx-4 shadow-sm">
+          <div class="card-body p-4 text-center">
+            
+            <h2 class="mb-3">Two-Factor Authentication</h2>
+            
+            <p class="text-body-secondary mb-4">
+              We've sent a 6-digit verification code to your registered device
+              {% if obfuscated_phone %}<strong>({{ obfuscated_phone }})</strong>{% endif %}.
+            </p>
+
+            {% if error %}
+              <div class="alert alert-danger" role="alert">
+                {{ error }}
+              </div>
+            {% endif %}
+
+            <form method="POST" action="{% url 'portal_otp_verify' %}">
+              {% csrf_token %}
+              
+              <div class="input-group mb-4 justify-content-center">
+                <input class="form-control text-center fs-3 fw-bold letter-spacing-2" 
+                       style="max-width: 250px; letter-spacing: 0.5rem;"
+                       type="text" 
+                       name="otp_code" 
+                       placeholder="••••••" 
+                       maxlength="6" 
+                       required 
+                       autofocus 
+                       autocomplete="one-time-code"
+                       pattern="\d{6}"
+                       title="Please enter a valid 6-digit code">
+              </div>
+              
+              <button class="btn btn-primary btn-lg w-100 mb-3" type="submit">
+                Verify Code
+              </button>
+              
+              <div class="text-center mt-3">
+                <a href="{% url 'portal_login' %}" class="text-decoration-none text-muted">
+                  Cancel and return to Login
+                </a>
+              </div>
+              
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

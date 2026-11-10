@@ -1,0 +1,53 @@
+{% extends "base/layout.html" %}
+{% load static %}
+{% block title %}Charts — Auth Manager{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+  <!-- Line Chart Card -->
+  <div class="col-12">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <strong>Authentication Traffic Analysis</strong>
+        <span class="text-body-secondary small">Real-time Activity</span>
+      </div>
+      <div class="card-body">
+        <div class="c-chart-wrapper chart-h-300">
+          <canvas id="chartsPageLine"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bar Chart Card -->
+  <div class="col-sm-12 col-xl-6">
+    <div class="card mb-4">
+      <div class="card-header"><strong>Logins by Application Type</strong></div>
+      <div class="card-body">
+        <div class="c-chart-wrapper chart-h-300">
+          <canvas id="chartsPageBar"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pie / Doughnut Chart Card -->
+  <div class="col-sm-12 col-xl-6">
+    <div class="card mb-4">
+      <div class="card-header"><strong>User Role Distribution</strong></div>
+      <div class="card-body">
+        <div class="c-chart-wrapper chart-h-300">
+          <canvas id="chartsPageDoughnut"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Load the external secure JS file to initialize the charts -->
+<script src="{% static 'js/charts_page.js' %}"></script>
+{% endblock %}

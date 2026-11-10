@@ -1,0 +1,266 @@
+{% extends "base/layout.html" %}
+{% load static %}
+{% block title %}Application Access — Auth Manager{% endblock %}
+
+{% block content %}
+
+<!-- FIXED: Cleaned up inline toast styles -->
+<div id="toastContainer" class="toast-container-custom">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="toast-item toast-{{ message.tags }}">
+        <span class="toast-icon">
+          {% if message.tags == 'success' %}✓{% elif message.tags == 'error' or message.tags == 'danger' %}✕{% elif message.tags == 'warning' %}⚠{% else %}ℹ{% endif %}
+        </span>
+        <div class="toast-content">
+          <div class="toast-title {% if message.tags == 'success' %}text-success-dark{% elif message.tags == 'error' or message.tags == 'danger' %}text-danger-dark{% elif message.tags == 'warning' %}text-warning-dark{% else %}text-info-dark{% endif %}">
+            {% if message.tags == 'success' %}Success{% elif message.tags == 'error' or message.tags == 'danger' %}Error{% elif message.tags == 'warning' %}Warning{% else %}Info{% endif %}
+          </div>
+          <div class="toast-message {% if message.tags == 'success' %}text-success-dark{% elif message.tags == 'error' or message.tags == 'danger' %}text-danger-dark{% elif message.tags == 'warning' %}text-warning-dark{% else %}text-info-dark{% endif %}">
+            {{ message }}
+          </div>
+        </div>
+        <button class="toast-close-btn">×</button>
+      </div>
+    {% endfor %}
+  {% endif %}
+</div>
+
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <strong>Application Access</strong>
+    
+    {% if not is_checker %}
+      <button type="button" class="btn btn-secondary btn-sm" data-coreui-toggle="modal" data-coreui-target="#addAppModal">+ Add Application</button>
+    {% endif %}
+  </div>
+
+  <div class="card-body border-bottom pb-3">
+    <!-- FIXED: Replaced inline max-width -->
+    <div class="input-group max-w-400px">
+      <span class="input-group-text"><svg class="icon"><use xlink:href="#cil-magnifying-glass"></use></svg></span>
+      <input type="text" id="appSearch" class="form-control" placeholder="Search applications..." />
+    </div>
+  </div>
+
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover table-align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4">App Name</th>
+            <th>App ID</th>
+            <th>Auth Type</th>
+            <th>Status</th>
+            <th>Registered On</th>
+            <th class="text-center pe-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="appTableBody">
+          {% for app in applications %}
+          <tr class="app-row" data-search-content="{{ app.app_name|lower }} {{ app.app_id|lower }}">
+            <td class="fw-semibold ps-4">{{ app.app_name }}</td>
+            <td><code>{{ app.app_id }}</code></td>
+            <td>
+              {% if app.app_type %}
+                <span class="badge bg-secondary">{{ app.app_type.name }}</span>
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              {% if app.status == 'approved' %}
+                <span class="badge bg-success">Approved</span>
+              {% elif app.status == 'rejected' %}
+                <span class="badge bg-danger">Rejected</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Pending</span>
+              {% endif %}
+            </td>
+            <td class="text-body-secondary">{{ app.created_at|date:"d M Y" }}</td>
+            <td class="text-center pe-4">
+              <!-- FIXED: Replaced inline styles with custom classes -->
+      <button class="action-btn btn-view-custom view-btn" title="View / Edit Application"
+        data-coreui-toggle="modal" 
+        data-coreui-target="#viewAppModal"
+        data-action-url="{% url 'edit_app' app.id %}" 
+        data-id="{{ app.id }}"
+        data-name="{{ app.app_name }}"
+        data-appid="{{ app.app_id }}"
+        data-type="{% if app.app_type %}{{ app.app_type.id }}{% else %}{% endif %}"
+        data-status="{{ app.status }}"
+        data-desc="{{ app.description|escapejs }}"
+        data-login-url="{{ app.login_url|default:'' }}">
+  <svg class="icon"><use xlink:href="#cil-eye"></use></svg>
+</button>
+            </td>
+          </tr>
+          {% empty %}
+          <tr id="emptyStateRow"><td colspan="6" class="text-center text-body-secondary py-4">No applications registered yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div id="noResults" class="text-center text-body-secondary py-4 d-none">No applications match your search.</div>
+    </div>
+  </div>
+  
+  <div class="card-footer d-flex justify-content-between align-items-center bg-white py-3">
+    <span id="paginationInfo" class="text-body-secondary small fw-medium">Showing 0 entries</span>
+    <div class="btn-group shadow-sm">
+      <button id="prevBtn" class="btn btn-light border btn-sm px-3">Previous</button>
+      <button id="nextBtn" class="btn btn-light border btn-sm px-4">Next</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="viewAppModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <!-- FIXED: Replaced inline background styles with bg-dark -->
+      <div class="modal-header bg-dark text-white">
+        <div>
+          <h5 class="modal-title mb-0">Application Details</h5>
+          <small id="modalSubTitle" class="opacity-75"></small>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-coreui-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        
+        <form id="editAppForm" method="POST" action="">
+          {% csrf_token %}
+          
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="modal-field-label">App Name</label>
+              <input type="text" class="form-control modal-editable" name="app_name" id="modalAppName" disabled required>
+            </div>
+            <div class="col-md-6">
+              <label class="modal-field-label">App ID</label>
+              <input type="text" class="form-control modal-editable" name="app_id" id="modalAppId" disabled required>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="modal-field-label">Auth Type</label>
+              <select class="form-select modal-editable" name="app_type" id="modalAppType" disabled>
+                <option value="">—</option>
+                {% for auth in auth_types %}
+                  <option value="{{ auth.id }}">{{ auth.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="modal-field-label">Compliance Status</label>
+              <select class="form-select checker-editable" name="status" id="modalStatus" disabled>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              {% if not can_approve %}
+                <!-- FIXED: Replaced inline !important display style with d-none -->
+                <small class="text-danger mt-1 d-none fs-10px" id="statusWarning">Only Checkers can modify status.</small>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-12">
+              <label class="modal-field-label">Login URL</label>
+              <input type="url" class="form-control modal-editable" name="login_url" id="modalLoginUrl" placeholder="https://app.example.com/login" disabled>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="modal-field-label">Description</label>
+              <textarea class="form-control modal-editable" name="description" id="modalDesc" rows="3" disabled></textarea>
+            </div>
+          </div>
+        </form>
+
+      </div>
+      <div class="modal-footer d-flex gap-2 justify-content-end">
+        <button type="button" class="btn btn-primary" id="editToggleBtn"><svg class="icon me-1"><use xlink:href="#cil-pencil"></use></svg> Edit</button>
+        <button type="submit" form="editAppForm" class="btn btn-success text-white d-none" id="saveBtn"><svg class="icon me-1"><use xlink:href="#cil-check"></use></svg> Save Changes</button>
+        <button type="button" class="btn btn-outline-secondary d-none" id="cancelEditBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="addAppModal" tabindex="-1" aria-hidden="true" data-coreui-backdrop="static">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <!-- FIXED: Replaced inline styles -->
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title mb-0">Register New Application</h5>
+        <button type="button" class="btn-close btn-close-white" data-coreui-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="addAppForm" method="POST" action="{% url 'add_app' %}">
+          {% csrf_token %}
+          <div class="modal-section-title mb-3">Application Identity</div>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="modal-field-label">App Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="app_name" required placeholder="e.g. Core Banking API">
+            </div>
+            <div class="col-md-6">
+              <label class="modal-field-label">App ID <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" name="app_id" required placeholder="e.g. PBL-CORE-APP">
+            </div>
+          </div>
+
+          <div class="modal-section-title mb-3">Configuration & Parameters</div>
+          <div class="row g-3 mb-2">
+            <div class="col-md-6">
+              <label class="modal-field-label">Authentication Type</label>
+              <select class="form-select" name="app_type">
+                <option value="" selected>— Select Type —</option>
+                {% for auth in auth_types %}
+                  <option value="{{ auth.id }}">{{ auth.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <input type="hidden" name="status" value="pending">
+            <div class="col-md-6">
+              <label class="modal-field-label">Initial Status</label>
+              <div class="pt-2"><span class="badge bg-warning text-dark px-3 py-2">Pending Checker Approval</span></div>
+            </div>
+            <div class="col-12 mt-3">
+              <label class="modal-field-label">Login URL</label>
+              <input type="url" class="form-control" name="login_url" placeholder="https://app.example.com/login">
+              <small class="form-text text-muted">Where users will be sent to log in once approved.</small>
+            </div>
+            <div class="col-12 mt-3">
+              <label class="modal-field-label">Description</label>
+              <textarea class="form-control" name="description" rows="3" placeholder="Brief explanation of application function and integration scope..."></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-secondary" data-coreui-dismiss="modal">Cancel</button>
+        <button type="submit" form="addAppForm" class="btn btn-success text-white">
+          <svg class="icon me-1 w-14px h-14px fill-current"><use xlink:href="#cil-check"></use></svg> Save Application
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="cil-magnifying-glass" viewBox="0 0 512 512"><path d="M508.5 468.9L387.1 347.5c28.7-34.9 46-79.6 46-128.5C433.1 100.1 333 0 209.6 0S-13.9 100.1-13.9 219c0 118.9 100.1 219 223.5 219 48.9 0 93.6-17.3 128.5-46l121.4 121.4c10.9 10.9 28.6 10.9 39.5 0l9.5-9.5c10.8-10.9 10.8-28.6 0-39.5zM209.6 392c-95.1 0-172.3-77.2-172.3-172.3S114.5 47.4 209.6 47.4s172.3 77.2 172.3 172.3S304.7 392 209.6 392z"/></symbol>
+  <symbol id="cil-check" viewBox="0 0 512 512"><path d="M192 400L64 272l45.3-45.3L192 309.3 402.7 96 448 141.3z"/></symbol>
+  <symbol id="cil-pencil" viewBox="0 0 512 512"><path d="M352 64l96 96-256 256H96v-96L352 64zm0 45.3L106.7 352H144v37.3L389.3 144 352 109.3zM80 416h352v32H80z"/></symbol>
+  <symbol id="cil-eye" viewBox="0 0 512 512"><path d="M256 112c-88.4 0-163.4 54.2-192 132 28.6 77.8 103.6 132 192 132s163.4-54.2 192-132c-28.6-77.8-103.6-132-192-132zm0 220c-48.6 0-88-39.4-88-88s39.4-88 88-88 88 39.4 88 88-39.4 88-88 88zm0-144c-30.9 0-56 25.1-56 56s25.1 56 56 56 56-25.1 56-56-25.1-56-56-56z"/></symbol>
+</svg>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- 1. Safely inject the django context variable as JSON -->
+{{ can_approve|yesno:"true,false"|json_script:"canApproveData" }}
+
+<!-- 2. Load the external, secure JS file -->
+<script src="{% static 'js/application_access.js' %}?v=3"></script>{% endblock %}

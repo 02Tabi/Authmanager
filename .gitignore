@@ -1,0 +1,17 @@
+# Environment Variables
+
+.env
+*.pem
+*.key
+debug_key.txt
+
+
+__pycache__/
+*.pyc
+venv/
+env/
+db.sqlite3
+
+
+desktop.ini
+.vscode/

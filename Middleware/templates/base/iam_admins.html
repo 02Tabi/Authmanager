@@ -1,0 +1,109 @@
+{% extends "base/layout.html" %}
+
+{% block title %}IAM Administrators — Auth Manager{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <strong>
+            <svg class="icon me-2">
+                <use xlink:href="/static/vendors/@coreui/icons/svg/free.svg#cil-shield-alt"></use>
+            </svg>
+            IAM Administrators
+        </strong>
+        <span class="badge bg-primary rounded-pill">System Controllers</span>
+    </div>
+    
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>System Role</th>
+                        <th>Status</th>
+                        <th>Approved By</th>
+                        <th>Date Assigned</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for admin in iam_admins %}
+                    <tr>
+                        <td class="fw-semibold">{{ admin.user.username }}</td>
+                        <td>
+                            {{ admin.user.profile.firstname|default:"-" }} 
+                            {{ admin.user.profile.lastname|default:"" }}
+                        </td>
+                        <td>
+                            {% if admin.permission_type == 'admin' %}
+                                Admin
+                            {% elif admin.permission_type == 'maker' %}
+                                Maker
+                            {% elif admin.permission_type == 'checker' %}
+                                Checker
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if admin.approval_status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                            {% elif admin.approval_status == 'pending' %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% else %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ admin.approved_by.username|default:"System/None" }}</td>
+                        <td>{{ admin.created_at|date:"M d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-body-secondary py-4">
+                            <svg class="icon icon-3xl mb-2 text-secondary">
+                                <use xlink:href="/static/vendors/@coreui/icons/svg/free.svg#cil-warning"></use>
+                            </svg><br>
+                            No IAM Administrators found in the system.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        {% if iam_admins.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center mb-0">
+                {% if iam_admins.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ iam_admins.previous_page_number }}">Previous</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                {% endif %}
+
+                {% for i in iam_admins.paginator.page_range %}
+                    {% if iam_admins.number == i %}
+                        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if iam_admins.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ iam_admins.next_page_number }}">Next</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

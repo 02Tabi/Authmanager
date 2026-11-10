@@ -1,0 +1,104 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Auth Manager</title>
+  <link rel="stylesheet" href="{% static 'css/coreui.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/all.min.css' %}">
+</head>
+
+<body class="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
+
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-11 col-lg-10">
+
+        <div class="card overflow-hidden mx-auto">
+          <div class="row g-0">
+
+            <!-- Left: Login form (wider) -->
+            <div class="col-md-7 p-5 d-flex flex-column justify-content-center">
+              <h1 class="fs-2 fw-bold mb-1">Login</h1>
+              <p class="text-body-secondary mb-4">Sign In to your account</p>
+
+              {% if error %}
+                <div class="alert alert-danger py-2">{{ error }}</div>
+              {% endif %}
+
+              <form method="post" action="{% url 'portal_login' %}">
+                {% csrf_token %}
+
+                <div class="input-group mb-3">
+                  <span class="input-group-text">
+                    <svg class="icon"><use xlink:href="#cil-user"></use></svg>
+                  </span>
+                  <input
+                    class="form-control"
+                    type="text"
+                    name="username"
+                    placeholder="Username"
+                    autocomplete="username"
+                    required
+                  />
+                </div>
+
+                <div class="input-group mb-4">
+                  <span class="input-group-text">
+                    <svg class="icon"><use xlink:href="#cil-lock-locked"></use></svg>
+                  </span>
+                  <input
+                    class="form-control"
+                    type="password"
+                    name="password"
+                    placeholder="Password"
+                    autocomplete="current-password"
+                    required
+                  />
+                </div>
+
+                <div class="row mt-2">
+                  <div class="col-6">
+                    <button class="btn btn-primary px-4 w-100" type="submit">Login</button>
+                  </div>
+                  <div class="col-6 text-end">
+                    <a class="btn btn-link px-0" href="#"></a>
+                  </div>
+                </div>
+
+              </form>
+            </div>
+
+            <div class="col-md-5 d-flex flex-column align-items-center justify-content-center text-white p-5 bg-primary">
+              <img
+                src="{% static 'img/pb_logo.png' %}"
+                alt="PBL Logo"
+                height="100"
+                class="mb-4"
+              />
+              <h2 class="fw-bold text-center mb-3">AUTH MANAGER</h2>
+              <p class="text-center small opacity-75 px-3">
+                Centralized access and permission management for all your applications.
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+    <symbol id="cil-user" viewBox="0 0 512 512">
+      <path d="M256 256c-52.8 0-96-43.2-96-96s43.2-96 96-96 96 43.2 96 96-43.2 96-96 96zm-160 176c0-88.4 71.6-160 160-160s160 71.6 160 160H96z"/>
+    </symbol>
+    <symbol id="cil-lock-locked" viewBox="0 0 512 512">
+      <path d="M368 192h-16v-48C352 100.3 307.7 56 256 56S160 100.3 160 144v48h-16a32 32 0 0 0-32 32v192a32 32 0 0 0 32 32h224a32 32 0 0 0 32-32V224a32 32 0 0 0-32-32zm-176-48c0-35.3 28.7-64 64-64s64 28.7 64 64v48H192v-48zm80 168v40h-32v-40a32 32 0 1 1 32 0z"/>
+    </symbol>
+  </svg>
+
+  <script src="{% static 'js/coreui.bundle.min.js' %}"></script>
+</body>
+</html>

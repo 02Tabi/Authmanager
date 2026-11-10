@@ -1,0 +1,86 @@
+{% extends "base/layout.html" %}
+{% load static %}
+{% block title %}Application Access Policies — Auth Manager{% endblock %}
+
+{% block content %}
+
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <strong>Application Access Policies</strong>
+  </div>
+
+  <div class="card-body border-bottom pb-3">
+    <!-- FIXED: Removed inline style, added max-w-400px -->
+    <div class="input-group max-w-400px">
+      <span class="input-group-text">
+        <svg class="icon"><use xlink:href="#cil-magnifying-glass"></use></svg>
+      </span>
+      <input type="text" id="policySearch" class="form-control"
+             placeholder="Search by user, application or permission..." />
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover table-align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Username</th>
+            <th>Application</th>
+            <th>App ID</th>
+            <th>Auth Type</th>
+            <th>Permission</th>
+            <th>Status</th>
+            <th>Granted On</th>
+          </tr>
+        </thead>
+        <tbody id="policyTableBody">
+          {% for perm in permissions %}
+          <!-- FIXED: Added policy-row class for secure JS targeting -->
+          <tr class="policy-row">
+            <td class="fw-semibold">{{ perm.user.username }}</td>
+            <td>{{ perm.application.app_name }}</td>
+            <td><code>{{ perm.application.app_id }}</code></td>
+            <td>
+              {% if perm.application.app_type %}
+                <span class="badge bg-secondary">{{ perm.application.app_type.name }}</span>
+              {% else %}—{% endif %}
+            </td>
+            <td><span class="badge bg-info">{{ perm.permission_type }}</span></td>
+            <td>
+              {% if perm.is_active %}
+                <span class="badge bg-success">Active</span>
+              {% else %}
+                <span class="badge bg-danger">Inactive</span>
+              {% endif %}
+            </td>
+            <td>{{ perm.created_at|date:"d M Y" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center text-body-secondary py-4">No access policies found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <!-- FIXED: Removed inline style, added d-none class -->
+      <div id="noResults" class="text-center text-body-secondary py-4 d-none">
+        No policies match your search.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FIXED: Removed inline style, added d-none class -->
+<svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="cil-magnifying-glass" viewBox="0 0 512 512">
+    <path d="M508.5 468.9L387.1 347.5c28.7-34.9 46-79.6 46-128.5C433.1 100.1 333 0 209.6 0S-13.9 100.1-13.9 219c0 118.9 100.1 219 223.5 219 48.9 0 93.6-17.3 128.5-46l121.4 121.4c10.9 10.9 28.6 10.9 39.5 0l9.5-9.5c10.8-10.9 10.8-28.6 0-39.5zM209.6 392c-95.1 0-172.3-77.2-172.3-172.3S114.5 47.4 209.6 47.4s172.3 77.2 172.3 172.3S304.7 392 209.6 392z"/>
+  </symbol>
+</svg>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- FIXED: Replaced inline script block with external secure file -->
+<script src="{% static 'js/app_access_policies.js' %}"></script>
+{% endblock %}

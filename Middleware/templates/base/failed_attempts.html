@@ -1,0 +1,127 @@
+{% extends "base/layout.html" %}
+{% load static %}
+{% block title %}Failed Attempts — Auth Manager{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <strong>Failed Login Attempts</strong>
+    <!-- Updated to use paginator.count to show the total across all pages -->
+    <span class="badge bg-danger">{{ attempts.paginator.count }} Failed Attempts</span>
+  </div>
+
+  <div class="card-body border-bottom pb-3">
+    <div class="input-group max-w-400px">
+      <span class="input-group-text">
+        <svg class="icon"><use xlink:href="#cil-magnifying-glass"></use></svg>
+      </span>
+      <input type="text" id="attemptSearch" class="form-control" placeholder="Search by username or IP..." />
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="failedLoginsTable" class="table table-hover table-align-middle mb-0 w-100">
+        <thead class="table-light">
+          <tr>
+            <th class="w-20">Username</th>
+            <th class="w-25">Reason</th>
+            <th class="w-15">IP Address</th>
+            <th class="w-25">User Agent</th>
+            <th class="w-15">Time</th>
+          </tr>
+        </thead>
+        <tbody id="attemptTableBody">
+          {% for attempt in attempts %}
+          <tr>
+            <td class="fw-semibold text-danger ws-nowrap">{{ attempt.username }}</td>
+            <td class="ws-nowrap" title="{{ attempt.reason }}">{{ attempt.reason|default:"—" }}</td>
+            <td class="ws-nowrap">{{ attempt.ip_address|default:"—" }}</td>
+            <td class="max-w-260px">
+              {% if attempt.user_agent %}
+                <div class="ua-wrapper">
+                  <span class="ua-short text-body-secondary small">
+                    {{ attempt.user_agent|truncatechars:50 }}
+                  </span>
+                  {% if attempt.user_agent|length > 50 %}
+                    <button class="btn btn-link btn-sm p-0 ms-1 ua-toggle fs-11px va-baseline" type="button">
+                      more ▾
+                    </button>
+                    <div class="ua-full text-body-secondary small mt-1 d-none wb-break-word ws-normal">
+                      {{ attempt.user_agent }}
+                      <button class="btn btn-link btn-sm p-0 ms-1 ua-toggle fs-11px" type="button">
+                        less ▴
+                      </button>
+                    </div>
+                  {% endif %}
+                </div>
+              {% else %}—{% endif %}
+            </td>
+            <td class="ws-nowrap">{{ attempt.created_at|date:"d M Y H:i:s" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="text-center text-body-secondary py-4">No failed attempts recorded.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% if attempts.has_other_pages %}
+      <nav aria-label="Failed attempts pagination" class="mt-4 d-flex justify-content-end">
+        <!-- Added flex-wrap so it never stretches off screen -->
+        <ul class="pagination mb-0 flex-wrap">
+          
+          <!-- Previous Button -->
+          {% if attempts.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ attempts.previous_page_number }}">Previous</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link">Previous</span>
+            </li>
+          {% endif %}
+
+          <!-- Page Numbers with Ellipsis -->
+          {% for num in page_range %}
+            {% if num == attempts.paginator.ELLIPSIS %}
+              <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% else %}
+              {% if attempts.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+              {% else %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+
+          <!-- Next Button -->
+          {% if attempts.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ attempts.next_page_number }}">Next</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link">Next</span>
+            </li>
+          {% endif %}
+          
+        </ul>
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="cil-magnifying-glass" viewBox="0 0 512 512">
+    <path d="M508.5 468.9L387.1 347.5c28.7-34.9 46-79.6 46-128.5C433.1 100.1 333 0 209.6 0S-13.9 100.1-13.9 219c0 118.9 100.1 219 223.5 219 48.9 0 93.6-17.3 128.5-46l121.4 121.4c10.9 10.9 28.6 10.9 39.5 0l9.5-9.5c10.8-10.9 10.8-28.6 0-39.5zM209.6 392c-95.1 0-172.3-77.2-172.3-172.3S114.5 47.4 209.6 47.4s172.3 77.2 172.3 172.3S304.7 392 209.6 392z"/>
+  </symbol>
+</svg>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Secure internal JS only -->
+<script src="{% static 'js/failed_attempt.js' %}"></script>
+{% endblock %}

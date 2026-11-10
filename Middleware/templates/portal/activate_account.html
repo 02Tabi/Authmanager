@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Activate Account — Auth Manager</title>
+</head>
+<body>
+  <h2>Set Your Password</h2>
+
+  {% if messages %}
+    <ul>
+      {% for message in messages %}<li>{{ message }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+
+  {% if invalid_link %}
+    <p>This link is invalid or has expired. Please contact your administrator for a new one.</p>
+  {% else %}
+    <form method="POST">
+      {% csrf_token %}
+      <label>New Password</label><br>
+      <input type="password" name="new_password" required><br><br>
+      <label>Confirm Password</label><br>
+      <input type="password" name="confirm_password" required><br><br>
+      <button type="submit">Set Password</button>
+    </form>
+  {% endif %}
+</body>
+</html>

@@ -1,0 +1,60 @@
+{% extends "base/layout.html" %}
+{% block title %}Add App — Auth Manager{% endblock %}
+
+{% block content %}
+
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <strong>Add Application</strong>
+    <a href="{% url 'app_management' %}" class="btn btn-secondary btn-sm">← Back to Apps</a>
+  </div>
+  <div class="card-body">
+    <form method="post" action="{% url 'add_app' %}">
+      {% csrf_token %}
+      <table class="table table-bordered">
+        <tbody>
+          <tr>
+            <!-- FIXED: Removed style="width: 25%;" and replaced with Bootstrap class "w-25" -->
+            <th class="w-25">App Name <span class="text-danger">*</span></th>
+            <td><input type="text" class="form-control" name="app_name" required /></td>
+          </tr>
+          <tr>
+            <th>App ID <span class="text-danger">*</span></th>
+            <td><input type="text" class="form-control" name="app_id" required /></td>
+          </tr>
+          <tr>
+            <th>Description</th>
+            <td><textarea class="form-control" name="description" rows="3"></textarea></td>
+          </tr>
+          <tr>
+            <th>Authentication Type</th>
+            <td>
+              <select class="form-select" name="app_type">
+                <option value="">— Select Type —</option>
+                {% for auth in auth_types %}
+                  <option value="{{ auth.id }}">{{ auth.name }}</option>
+                {% endfor %}
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <th>Status</th>
+            <td>
+              <select class="form-select" name="status">
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="text-end mt-3">
+        <a href="{% url 'app_management' %}" class="btn btn-secondary me-2">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Application</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

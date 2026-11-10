@@ -1,0 +1,101 @@
+{% extends "base/layout.html" %}
+{% load static %}
+{% block title %}User Access Control — Auth Manager{% endblock %}
+
+{% block content %}
+
+<div class="card mb-4">
+  {% csrf_token %}
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <strong>User Access Control</strong>
+  </div>
+
+  <div class="card-body border-bottom pb-3">
+    <div class="input-group max-w-400px">
+      <span class="input-group-text">
+        <svg class="icon"><use xlink:href="#cil-magnifying-glass"></use></svg>
+      </span>
+      <input type="text" id="accessSearch" class="form-control"
+             placeholder="Search by username, role or status..." />
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover table-align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Username</th>
+            <th>Full Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Account Status</th>
+            <th>Last Login</th>
+            <th>Failed Attempts</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="accessTableBody">
+          {% for profile in profiles %}
+          <!-- FIXED: Added access-row class for secure JavaScript targeting -->
+          <tr class="access-row">
+            <td class="fw-semibold">{{ profile.username.username }}</td>
+            <td>{{ profile.firstname|default:"" }} {{ profile.lastname|default:"" }}</td>
+            <td>{{ profile.email|default:"—" }}</td>
+            <td><span class="badge bg-secondary">{{ profile.user_role }}</span></td>
+            <td>
+              {% if profile.user_status == 'active' %}
+                <span class="badge bg-success">Active</span>
+              {% elif profile.user_status == 'inactive' %}
+                <span class="badge bg-warning text-dark">Inactive</span>
+              {% elif profile.user_status == 'suspended' %}
+                <span class="badge bg-danger">Suspended</span>
+              {% else %}
+                <span class="badge bg-dark">Banned</span>
+              {% endif %}
+            </td>
+            <td>{{ profile.last_login|date:"d M Y H:i"|default:"Never" }}</td>
+            <td>
+              {% if profile.failed_login_attempts > 0 %}
+                <span class="badge bg-danger">{{ profile.failed_login_attempts }}</span>
+              {% else %}
+                <span class="text-body-secondary">0</span>
+              {% endif %}
+            </td>
+            <td>
+  {% if profile.is_active %}
+    <a href="{% url 'deactivate_profile' profile.id %}" class="btn btn-sm btn-danger confirm-action-btn" data-confirm-msg="Deactivate this user?">Deactivate</a>
+  {% else %}
+    <a href="{% url 'activate_profile' profile.id %}" class="btn btn-sm btn-success confirm-action-btn" data-confirm-msg="Activate this user?">Activate</a>
+  {% endif %}
+  <a href="{% url 'reset_attempts' profile.id %}" class="btn btn-sm btn-warning confirm-action-btn ms-1" data-confirm-msg="Reset failed login attempts?">Reset Attempts</a>
+</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center text-body-secondary py-4">No users found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <!-- FIXED: Replaced style="display:none;" with d-none -->
+      <div id="noResults" class="text-center text-body-secondary py-4 d-none">
+        No users match your search.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FIXED: Replaced style="display:none;" with d-none -->
+<svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="cil-magnifying-glass" viewBox="0 0 512 512">
+    <path d="M508.5 468.9L387.1 347.5c28.7-34.9 46-79.6 46-128.5C433.1 100.1 333 0 209.6 0S-13.9 100.1-13.9 219c0 118.9 100.1 219 223.5 219 48.9 0 93.6-17.3 128.5-46l121.4 121.4c10.9 10.9 28.6 10.9 39.5 0l9.5-9.5c10.8-10.9 10.8-28.6 0-39.5zM209.6 392c-95.1 0-172.3-77.2-172.3-172.3S114.5 47.4 209.6 47.4s172.3 77.2 172.3 172.3S304.7 392 209.6 392z"/>
+  </symbol>
+</svg>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- FIXED: Replaced inline script block with external secure file -->
+<script src="{% static 'js/user_access_control.js' %}"></script>
+{% endblock %}

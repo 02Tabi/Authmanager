@@ -1,0 +1,343 @@
+{% extends "base/layout.html" %}
+{% load static %}
+{% block title %}Dashboard — Auth Manager{% endblock %}
+
+{% block content %}
+
+<!-- ── Stat cards ── -->
+<div class="row g-4 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="card text-white bg-primary">
+      <div class="card-body pb-0 d-flex justify-content-between align-items-start">
+        <div>
+          <div class="fs-4 fw-semibold" id="val-total-users">{{ total_users }}</div>
+          <div>Total Users</div>
+        </div>
+        <div class="dropdown">
+          <button class="btn btn-transparent text-white p-0" data-coreui-toggle="dropdown">
+            <svg class="icon"><use xlink:href="#cil-options"></use></svg>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end">
+            <a class="dropdown-item" href="{% url 'user_management' %}">View Users</a>
+            <a class="dropdown-item" href="{% url 'add_user' %}">Add User</a>
+          </div>
+        </div>
+      </div>
+      <div class="c-chart-wrapper mt-3 mx-3 chart-h-70">
+        <canvas id="cardChart1"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card text-white bg-info">
+      <div class="card-body pb-0 d-flex justify-content-between align-items-start">
+        <div>
+          <div class="fs-4 fw-semibold" id="val-total-apps">{{ total_apps }}</div>
+          <div>Total Applications</div>
+        </div>
+        <div class="dropdown">
+          <button class="btn btn-transparent text-white p-0" data-coreui-toggle="dropdown">
+            <svg class="icon"><use xlink:href="#cil-options"></use></svg>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end">
+            <a class="dropdown-item" href="{% url 'app_management' %}">View Apps</a>
+            <a class="dropdown-item" href="{% url 'add_app' %}">Add App</a>
+          </div>
+        </div>
+      </div>
+      <div class="c-chart-wrapper mt-3 mx-3 chart-h-70">
+        <canvas id="cardChart2"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card text-white bg-warning">
+      <div class="card-body pb-0 d-flex justify-content-between align-items-start">
+        <div>
+          <div class="fs-4 fw-semibold" id="val-active-perms">{{ active_permissions }}</div>
+          <div>Active Permissions</div>
+        </div>
+        <div class="dropdown">
+          <button class="btn btn-transparent text-white p-0" data-coreui-toggle="dropdown">
+            <svg class="icon"><use xlink:href="#cil-options"></use></svg>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end">
+            <a class="dropdown-item" href="{% url 'app_access_policies' %}">View Policies</a>
+          </div>
+        </div>
+      </div>
+      <div class="c-chart-wrapper mt-3 mx-3 chart-h-70">
+        <canvas id="cardChart3"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card text-white bg-danger">
+      <div class="card-body pb-0 d-flex justify-content-between align-items-start">
+        <div>
+          <div class="fs-4 fw-semibold" id="val-pending">{{ pending_approvals }}</div>
+          <div>Pending Approvals</div>
+        </div>
+        <div class="dropdown">
+          <button class="btn btn-transparent text-white p-0" data-coreui-toggle="dropdown">
+            <svg class="icon"><use xlink:href="#cil-options"></use></svg>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end">
+            <a class="dropdown-item" href="{% url 'app_management' %}">Review Apps</a>
+          </div>
+        </div>
+      </div>
+      <div class="c-chart-wrapper mt-3 mx-3 chart-h-70">
+        <canvas id="cardChart4"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main activity chart ── -->
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="d-flex justify-content-between">
+      <div>
+        <h4 class="card-title mb-0">Authentication Activity</h4>
+        <div class="small text-body-secondary" id="chartDateRange">Last 7 Months</div>
+      </div>
+      <div class="btn-toolbar d-none d-md-block" role="toolbar">
+        <div class="btn-group btn-group-sm">
+          <!-- FIXED: Removed inline onclick, added ID for secure event binding -->
+          <button type="button" class="btn btn-outline-secondary" id="refreshDashboardBtn">
+            <svg class="icon"><use xlink:href="#cil-reload"></use></svg> Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="c-chart-wrapper mt-5 chart-h-300">
+      <canvas id="mainChart"></canvas>
+    </div>
+  </div>
+
+  <!-- KPI footer -->
+  <div class="card-footer">
+    <div class="row row-cols-1 row-cols-md-5 text-center">
+
+      <div class="col mb-sm-2 mb-0">
+        <div class="text-body-secondary">Total Logins</div>
+        <div class="fw-semibold">{{ total_logins }}</div>
+        <div class="progress progress-thin mt-2">
+          <div class="progress-bar bg-success" data-progress="{% widthratio total_logins total_users 100 %}"></div>
+        </div>
+      </div>
+
+      <div class="col mb-sm-2 mb-0">
+        <div class="text-body-secondary">Active Users</div>
+        <div class="fw-semibold">{{ active_users }}</div>
+        <div class="progress progress-thin mt-2">
+          <div class="progress-bar bg-info" data-progress="{% widthratio active_users total_users 100 %}"></div>
+        </div>
+      </div>
+
+      <div class="col mb-sm-2 mb-0">
+        <div class="text-body-secondary">Inactive Users</div>
+        <div class="fw-semibold">{{ inactive_users }}</div>
+        <div class="progress progress-thin mt-2">
+          <div class="progress-bar bg-warning" data-progress="{% widthratio inactive_users total_users 100 %}"></div>
+        </div>
+      </div>
+
+      <div class="col mb-sm-2 mb-0">
+        <div class="text-body-secondary">Approved Apps</div>
+        <div class="fw-semibold">{{ approved_apps }}</div>
+        <div class="progress progress-thin mt-2">
+          <div class="progress-bar bg-primary" data-progress="{% widthratio approved_apps total_apps 100 %}"></div>
+        </div>
+      </div>
+
+      <div class="col mb-sm-2 mb-0">
+        <div class="text-body-secondary">Pending Apps</div>
+        <div class="fw-semibold">{{ pending_approvals }}</div>
+        <div class="progress progress-thin mt-2">
+          <div class="progress-bar bg-danger" data-progress="{% widthratio pending_approvals total_apps 100 %}"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Progress groups ── -->
+<div class="row g-4 mb-4">
+  <!-- Login activity by day -->
+  <div class="col-sm-6 col-lg-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between mb-3">
+          <div>
+            <h5 class="card-title mb-0">Logins <span class="badge bg-info ms-1">by day</span></h5>
+          </div>
+          <div class="small text-body-secondary">This week vs Last week</div>
+        </div>
+
+        {% for day in progress_group_weekdays %}
+        <div class="progress-group mb-3">
+          <div class="progress-group-prepend">
+            <span class="text-body-secondary small">{{ day.title }}</span>
+          </div>
+          <div class="progress-group-bars">
+            <div class="progress progress-thin">
+              <div class="progress-bar bg-info" data-progress="{{ day.value1 }}"></div>
+            </div>
+            <div class="progress progress-thin">
+              <div class="progress-bar bg-danger" data-progress="{{ day.value2 }}"></div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+
+        <div class="legend d-flex justify-content-between mt-3">
+          <div class="d-flex align-items-center">
+            <span class="badge bg-info me-1">&nbsp;</span>
+            <small class="text-body-secondary">This week</small>
+          </div>
+          <div class="d-flex align-items-center">
+            <span class="badge bg-danger me-1">&nbsp;</span>
+            <small class="text-body-secondary">Last week</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User roles breakdown -->
+  <div class="col-sm-6 col-lg-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title mb-4">User Roles</h5>
+
+        {% for r in progress_group_roles %}
+        <div class="progress-group mb-4">
+          <div class="progress-group-header">
+            <svg class="icon icon-lg me-2"><use xlink:href="#cil-user"></use></svg>
+            <span>{{ r.title }}</span>
+            <span class="ms-auto fw-semibold">{{ r.value }}%</span>
+          </div>
+          <div class="progress progress-thin mt-2">
+            <div class="progress-bar bg-warning" data-progress="{{ r.value }}"></div>
+          </div>
+        </div>
+        {% empty %}
+        <p class="text-body-secondary">No role data available.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- App type breakdown -->
+  <div class="col-sm-12 col-lg-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title mb-4">Applications by Type</h5>
+
+        {% for app in progress_group_apps %}
+        <div class="progress-group mb-4">
+          <div class="progress-group-header">
+            <svg class="icon icon-lg me-2"><use xlink:href="#{{ app.icon }}"></use></svg>
+            <span>{{ app.title }}</span>
+            <span class="ms-auto fw-semibold">
+              {{ app.value }} <span class="text-body-secondary small">({{ app.percent }}%)</span>
+            </span>
+          </div>
+          <div class="progress progress-thin mt-2">
+            <div class="progress-bar bg-primary" data-progress="{{ app.percent }}"></div>
+          </div>
+        </div>
+        {% empty %}
+        <p class="text-body-secondary">No application data available.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Recent activity table ── -->
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <strong>Recent User Activity</strong>
+    <a href="{% url 'user_management' %}" class="btn btn-sm btn-primary">View All</a>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover table-align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Application</th>
+            <th>Permission</th>
+            <th>Status</th>
+            <th>Last Login</th>
+            <th>Granted On</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in table_rows %}
+          <tr>
+            <td>
+              <div class="fw-semibold">{{ row.user }}</div>
+              <div class="small text-body-secondary">{{ row.fullname }}</div>
+            </td>
+            <td>
+              <span class="badge bg-secondary">{{ row.role }}</span>
+            </td>
+            <td>{{ row.application }}</td>
+            <td>
+              <span class="badge bg-info">{{ row.permission }}</span>
+            </td>
+            <td>
+              {% if row.status %}
+                <span class="badge bg-success">Active</span>
+              {% else %}
+                <span class="badge bg-danger">Inactive</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if row.last_login %}
+                {{ row.last_login|date:"d M Y H:i" }}
+              {% else %}
+                <span class="text-body-secondary">Never</span>
+              {% endif %}
+            </td>
+            <td>{{ row.created_at|date:"d M Y" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center text-body-secondary py-4">No activity yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- 1. Securely inject Django data as safe JSON -->
+{{ months|json_script:"monthsData" }}
+{{ logins_per_month|json_script:"loginsData" }}
+{{ active_users_per_month|json_script:"activeUsersData" }}
+{{ new_users_per_month|json_script:"newUsersData" }}
+
+<!-- 2. Load the external, secure JS file -->
+<script src="{% static 'js/dashboard_charts.js' %}"></script>
+
+<!-- 3. Add reload icon to sprite -->
+<svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="cil-reload" viewBox="0 0 512 512">
+    <path d="M64 256c0-106 86-192 192-192 57.3 0 108.6 25 144 64.6V64h32v112H320v-32h67.6C356.5 111.6 308.6 88 256 88c-92.8 0-168 75.2-168 168H64zm384 0c0 106-86 192-192 192-57.3 0-108.6-25-144-64.6V448h-32V336h112v32H124.4C155.5 400.4 203.4 424 256 424c92.8 0 168-75.2 168-168h32z"/>
+  </symbol>
+</svg>
+{% endblock %}

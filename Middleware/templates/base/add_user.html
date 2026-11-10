@@ -1,0 +1,114 @@
+{% extends "base/layout.html" %}
+{% load static %}
+{% block title %}Add User — Auth Manager{% endblock %}
+
+{% block content %}
+
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <strong>Add User</strong>
+    <a href="{% url 'user_management' %}" class="btn btn-secondary btn-sm">← Back to Users</a>
+  </div>
+  <div class="card-body">
+    <form method="post" action="{% url 'add_user' %}">
+      {% csrf_token %}
+      
+      <h6 class="text-uppercase text-muted fw-bold mb-3">User Details</h6>
+      <table class="table table-bordered mb-4">
+        <tbody>
+          <tr>
+            <th class="w-20 align-middle">Username <span class="text-danger">*</span></th>
+            <td><input type="text" class="form-control" name="username" required /></td>
+          </tr>
+          <tr>
+            <th class="align-middle">First Name</th>
+            <td><input type="text" class="form-control" name="firstname" /></td>
+          </tr>
+          <tr>
+            <th class="align-middle">Last Name</th>
+            <td><input type="text" class="form-control" name="lastname" /></td>
+          </tr>
+          <tr>
+            <th class="align-middle">Email</th>
+            <td><input type="email" class="form-control" name="email" /></td>
+          </tr>
+          <tr>
+            <th class="align-middle">Phone</th>
+            <td><input type="text" class="form-control" name="phone" /></td>
+          </tr>
+          
+          <tr>
+            <th class="align-middle">Auth Type <span class="text-danger">*</span></th>
+            <td>
+              <select name="auth_type" id="auth_type" class="form-control" required>
+                  <option value="AD" selected>Active Directory (AD)</option>
+                  <option value="DB">Local User (DB - Auto Generates Password)</option>
+              </select>
+              <small class="form-text text-muted d-block mt-1">
+                  Selecting "Local User" will auto-generate a secure 12-character password and email it to the user.
+              </small>
+            </td>
+          </tr>
+          
+        </tbody>
+      </table>
+
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="text-uppercase text-muted fw-bold mb-0">Application Access</h6>
+        <button type="button" class="btn btn-sm btn-secondary fw-bold" id="addAppRowBtn">+ Add Another App</button>
+      </div>
+      
+      <table class="table table-bordered" id="appTable">
+        <tbody id="appRowsContainer">
+          <tr class="app-row">
+            <th class="w-20 align-middle">Assign Access <span class="text-danger">*</span></th>
+            <td>
+              <div class="d-flex gap-2">
+                <select class="form-select" name="user_role[]" required>
+                  <option value="">— Select Role —</option>
+                  <option value="staff">Staff</option>
+                  <option value="admin">Admin</option>
+                  <option value="manager">Manager</option>
+                  <option value="user">User</option>
+                </select>
+                <select class="form-select" name="app_id[]" required>
+                  <option value="">— Select Application —</option>
+                  {% for app in applications %}
+                    <option value="{{ app.id }}">{{ app.app_name }}</option>
+                  {% endfor %}
+                </select>
+                <select class="form-select" name="permission_type[]" required>
+                  <option value="">— Select Permission —</option>
+                  <option value="admin">Admin</option>
+                  <option value="maker">Maker</option>
+                  <option value="checker">Checker</option>
+                  <option value="user">User</option>
+                </select>
+                <button type="button" class="btn btn-danger text-white remove-app-row-btn" title="Remove" disabled>
+                  <svg class="icon w-16px h-16px"><use xlink:href="#cil-trash"></use></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="text-end mt-3 border-top pt-3">
+        <a href="{% url 'user_management' %}" class="btn btn-secondary me-2">Cancel</a>
+        <button type="submit" class="btn btn-secondary">Save User</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="cil-trash" viewBox="0 0 512 512">
+    <path d="M432 80h-96l-16-32H192l-16 32H80v48h352V80zM112 448l24 16h240l24-16 24-304H88l24 304z"/>
+  </symbol>
+</svg>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/add_user.js' %}"></script>
+{% endblock %}
